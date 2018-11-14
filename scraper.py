@@ -1,10 +1,9 @@
 import sys
 import spotipy
 import spotipy.util as util
-import pprint as pp
 import _pickle as pickle
-import atexit
 import os
+from collections import defaultdict
 
 max_playlists = 10000
 scope = 'user-library-read'
@@ -22,7 +21,7 @@ def is_good_playlist(items):
     return len(artists) > 1 and len(albums) > 1
 
 
-def process_playlist(which, total, playlist):
+def process_playlist(playlist):
     global data
     global playlist_names
 
@@ -78,11 +77,11 @@ def crawl_playlists():
         which = 0
         results = sp.search(query, limit=limit, type='playlist')
         playlist = results['playlists']
-        total = playlist['total']
         while playlist and count < max:
             count += 1
             for item in playlist['items']:
-                process_playlist(which, total, item)
+                print("Processing playlist: ", which)
+                process_playlist(item)
                 which += 1
             if playlist['next']:
                 results = sp.next(playlist)
@@ -99,14 +98,21 @@ def print_playlists():
             print("\t Track: ", track, "\t", song, "\t", artist)
 
 def build_edge_list():
+    edges = defaultdict(list)
     # Look at a playlist and add an edge for every track to every other.
-    for key in data:
-        print("Playlist: ", key, "\t", playlist_names[key])
-        for track in data[key]:
-            song = data[key][track][0]
-            artist =  data[key][track][1]
-            print("\t Track: ", track, "\t", song, "\t", artist)
+    for tracklist in data.values():
+        tids = list(tracklist.keys())
+        for track_index in range(len(tids)-1):
+            track_1 = tids[track_index]
+            for index in range(track_index+1, len(tids)):
+                track_2 = tids[index]
+                edges[track_1].append(track_2)
+    return edges
 
+def export_edge_list(edges):
+    for key in edges.keys():
+        for val in edges[key]:
+            print(key, val)
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -122,6 +128,7 @@ if __name__ == '__main__':
         data = load()
         crawl_playlists()
         print_playlists()
-        build_edge_list()
+        edges = build_edge_list()
+        export_edge_list(edges)
     else:
         print("Can't get token for", username)

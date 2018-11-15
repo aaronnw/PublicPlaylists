@@ -1,17 +1,19 @@
 import networkx as nx
 
 
-
 #An edge-tuple can be a 2-tuple of nodes or a 3-tuple with 2 nodes followed by an edge attribute dictionary, e.g., (2, 3, {'weight': 3.1415})
 
-def build_graph(edges):
+def build_graph(edges, track_data):
     G = nx.Graph()
-    unique_tracks = list(edges.keys())
+    unique_tracks = list(track_data)
     graph_edges = []
-    for track in unique_tracks:
-        G.add_node(track)
-        for related in edges[track]:
-            graph_edges.append((track, related[0], {'weight' : related[1]}))
+    graph_nodes = []
+    for tid in unique_tracks:
+        #Count the number of times a song is related to others
+
+        G.add_node(tid, title=track_data[tid].title, artist=track_data[tid].artist)
+        for related in edges[tid]:
+            graph_edges.append((tid, related[0], {'weight' : related[1]}))
     G.add_edges_from(graph_edges)
     nx.write_gml(G, "test_graph.gml")
 

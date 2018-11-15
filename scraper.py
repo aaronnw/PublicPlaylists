@@ -6,11 +6,14 @@ import os
 from collections import defaultdict
 from collections import Counter
 import graph_builder
+from track import Track
 
 max_playlists = 10000
 scope = 'user-library-read'
 data = {}
 playlist_names = {}
+#Link a track ID to a track object
+track_data = {}
 
 def is_good_playlist(items):
     artists = set()
@@ -25,6 +28,7 @@ def is_good_playlist(items):
 
 def process_playlist(playlist):
     global data
+    global track_data
     global playlist_names
 
     pid = playlist['id']
@@ -41,11 +45,12 @@ def process_playlist(playlist):
             data[pid] = {}
             for item in results['items']:
                 track = item['track']
-                if track:
+                if track and track['name'] and track['artists']:
                     tid = track['id']
                     title = track['name']
                     artist = track['artists'][0]['name']
-                    data[pid][tid] = tuple((title, artist))
+                    track_data[tid] = Track(title, artist)
+                    data[pid][tid] = Track(title, artist)
         else:
             print('mono playlist skipped')
     except spotipy.SpotifyException:
@@ -98,8 +103,8 @@ def print_playlists():
     for key in data:
         print("Playlist: ", key, "\t", playlist_names[key])
         for track in data[key]:
-            song = data[key][track][0]
-            artist =  data[key][track][1]
+            song = data[key][track].title
+            artist =  data[key][track].artist
             print("\t Track: ", track, "\t", song, "\t", artist)
 
 def build_edge_list():
@@ -136,10 +141,10 @@ if __name__ == '__main__':
 
     if token:
         sp = spotipy.Spotify(auth=token)
-        data = load()
+        # data = load()
         crawl_playlists()
         edges = build_edge_list()
         edges = combine_edges(edges)
-        graph_builder.build_graph(edges)
+        graph_builder.build_graph(edges, track_data)
     else:
         print("Can't get token for", username)

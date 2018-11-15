@@ -5,6 +5,7 @@ import _pickle as pickle
 import os
 from collections import defaultdict
 from collections import Counter
+import graph_builder
 
 max_playlists = 10000
 scope = 'user-library-read'
@@ -105,14 +106,14 @@ def build_edge_list():
     edges = defaultdict(list)
     # Look at a playlist and add an edge for every track to every other.
     for tracklist in data.values():
-        sorted_tids = sorted(list(tracklist.keys()))
+        tids = list(tracklist.keys())
+        sorted_tids = sorted([x for x in tids if x is not None])
         for track_index in range(len(sorted_tids)-1):
             track_1 = sorted_tids[track_index]
             for index in range(track_index+1, len(sorted_tids)):
                 track_2 = sorted_tids[index]
                 edges[track_1].append(track_2)
     return edges
-
 
 def combine_edges(edges):
     new_edges = defaultdict(list)
@@ -123,15 +124,6 @@ def combine_edges(edges):
             info = (next_track, counts[next_track])
             new_edges[track_1].append(info)
     return new_edges
-
-
-
-def export_edge_list(edges):
-    with open("edges.txt", 'w') as file:
-        for key in edges.keys():
-            for val in edges[key]:
-                rep = key + ' ' + str(val[0]) + ' ' + str(val[1]) + '\n'
-                file.write(rep)
 
 if __name__ == '__main__':
     if len(sys.argv) > 1:
@@ -146,9 +138,8 @@ if __name__ == '__main__':
         sp = spotipy.Spotify(auth=token)
         data = load()
         crawl_playlists()
-        print_playlists()
         edges = build_edge_list()
         edges = combine_edges(edges)
-        export_edge_list(edges)
+        graph_builder.build_graph(edges)
     else:
         print("Can't get token for", username)

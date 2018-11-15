@@ -45,7 +45,7 @@ def process_playlist(playlist):
             data[pid] = {}
             for item in results['items']:
                 track = item['track']
-                if track and track['name'] and track['artists']:
+                if track and (track['name'] is not None) and (track['artists'] is not None):
                     tid = track['id']
                     title = track['name']
                     artist = track['artists'][0]['name']
@@ -55,6 +55,8 @@ def process_playlist(playlist):
             print('mono playlist skipped')
     except spotipy.SpotifyException:
         print('trouble, skipping')
+    except ConnectionError:
+        print('Connection error, skipping')
 
 
 def save():
@@ -78,7 +80,7 @@ def load():
 def crawl_playlists():
     queries = ['the']
     limit = 50
-    max = 2
+    max = 20
     count = 0
     for query in queries:
         which = 0

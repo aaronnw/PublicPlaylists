@@ -12,12 +12,15 @@ def build_graph(edges, track_data):
         #Count the number of times a song is related to others
         max_connections = max([edge[1] for edge in edges[tid]])
         if max_connections > 1:
-            G.add_node(tid, title=track_data[tid].title, artist=track_data[tid].artist)
+            # Convert weird characters to work with the write
+            title = track_data[tid].title
+            artist = track_data[tid].artist
+            G.add_node(tid, title=title, artist=artist)
             for related in edges[tid]:
                 if related[1] > 1:
                     graph_edges.append((tid, related[0], {'weight' : related[1]}))
     G.add_edges_from(graph_edges)
-    nx.write_gml(G, "test_graph.gml")
+    nx.write_gml(G, "test_graph.gml", stringizer=nx.readwrite.gml.literal_stringizer)
 
 def export_edge_list(edges):
     with open("edges.txt", 'w') as file:

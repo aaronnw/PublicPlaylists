@@ -111,13 +111,10 @@ def build_edge_list():
     edges = defaultdict(list)
     # Look at a playlist and add an edge for every track to every other.
     for tracklist in data.values():
-        tids = list(tracklist.keys())
-        sorted_tids = sorted([x for x in tids if x is not None])
-        for track_index in range(len(sorted_tids)-1):
-            track_1 = sorted_tids[track_index]
-            for index in range(track_index+1, len(sorted_tids)):
-                track_2 = sorted_tids[index]
-                edges[track_1].append(track_2)
+        for track in tracklist:
+            for other_track in tracklist:
+                if track != other_track:
+                    edges[track].append(other_track)
     return edges
 
 def combine_edges(edges):

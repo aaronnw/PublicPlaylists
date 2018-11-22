@@ -60,19 +60,27 @@ def process_playlist(playlist):
 
 
 def save():
-    out = open('tracks.pkl', 'wb')
-    pickle.dump(data, out, -1)
-    out.close()
+    playlists_out = open('playlists.pkl', 'wb')
+    tracks_out = open('tracks.pkl', 'wb')
 
+    pickle.dump(data, playlists_out, -1)
+    pickle.dump(track_data, tracks_out, -1)
+
+    playlists_out.close()
+    tracks_out.close()
 
 def load():
     global data
+    global track_data
     global playlist_names
-    if os.path.exists('tracks.pkl'):
-        infile = open('tracks.pkl', 'rb')
-        data = pickle.load(infile)
+    if os.path.exists('tracks.pkl') and os.path.exists('playlists.pkl'):
+        playlist_file = open('playlists.pkl', 'rb')
+        track_file = open('tracks.pkl', 'rb')
+        data = pickle.load(playlist_file)
+        track_data = pickle.load(track_file)
     else:
         data = {}
+        track_data = {}
         playlist_names = {}
     return data
 
@@ -80,7 +88,7 @@ def load():
 def crawl_playlists():
     queries = ['the']
     limit = 50
-    max = 20
+    max = 2
     count = 0
     for query in queries:
         which = 0
@@ -140,8 +148,10 @@ if __name__ == '__main__':
 
     if token:
         sp = spotipy.Spotify(auth=token)
-        # data = load()
-        crawl_playlists()
+        data = load()
+        if len(data) == 0:
+            crawl_playlists()
+            save()
         edges = build_edge_list()
         edges = combine_edges(edges)
         graph_builder.build_graph(edges, track_data)

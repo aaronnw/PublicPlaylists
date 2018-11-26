@@ -6,10 +6,10 @@ import os
 from collections import defaultdict
 from collections import Counter
 import graph_builder
+import graph_analyzer
 from track import Track
 
 max_playlists = 10000
-scope = 'user-library-read'
 data = {}
 playlist_names = {}
 #Link a track ID to a track object
@@ -69,7 +69,21 @@ def save():
     playlists_out.close()
     tracks_out.close()
 
-def load():
+def save_graph(G):
+    graph_out = open('graph_bin.pkl', 'wb')
+    pickle.dump(G, graph_out, -1)
+    graph_out.close()
+
+def load_graph():
+    if os.path.exists('graph_bin.pkl'):
+        graph_in = open('graph_bin.pkl', 'rb')
+        graph = pickle.load(graph_in)
+        graph_in.close()
+        return graph
+    else:
+        return None
+
+def load_data():
     global data
     global track_data
     global playlist_names
@@ -137,6 +151,27 @@ def combine_edges(edges):
             new_edges[track_1].append(info)
     return new_edges
 
+def create_graph(username):
+    global sp
+    global data
+    scope = 'user-library-read'
+    token = util.prompt_for_user_token(username, scope)
+
+    if token:
+        sp = spotipy.Spotify(auth=token)
+        data = load_data()
+        if len(data) == 0:
+            crawl_playlists()
+            save()
+        edges = build_edge_list()
+        edges = combine_edges(edges)
+        G = graph_builder.build_graph(edges, track_data)
+        save_graph(G)
+    else:
+        print("Can't get token for", username)
+        sys.exit()
+    return G
+
 if __name__ == '__main__':
     if len(sys.argv) > 1:
         username = sys.argv[1]
@@ -144,16 +179,9 @@ if __name__ == '__main__':
         print("Usage: %s username" % (sys.argv[0],))
         sys.exit()
 
-    token = util.prompt_for_user_token(username, scope)
+    graph = load_graph()
 
-    if token:
-        sp = spotipy.Spotify(auth=token)
-        data = load()
-        if len(data) == 0:
-            crawl_playlists()
-            save()
-        edges = build_edge_list()
-        edges = combine_edges(edges)
-        graph_builder.build_graph(edges, track_data)
-    else:
-        print("Can't get token for", username)
+    if graph is None:
+        graph = create_graph(username)
+
+    graph_analyzer.analyze(graph)

@@ -20,7 +20,7 @@ def build_graph(edges, track_data):
                 if related[1] > 1:
                     graph_edges.append((tid, related[0], {'weight' : related[1]}))
     G.add_edges_from(graph_edges)
-    nx.write_gml(G, "test_graph.gml", stringizer=nx.readwrite.gml.literal_stringizer)
+    return G
 
 def export_edge_list(edges):
     with open("edges.txt", 'w') as file:

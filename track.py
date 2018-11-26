@@ -4,7 +4,7 @@ class Track:
 
     def __init__(self,
         title: str,
-        artist: str,
+        artist: str
         ) -> None:
         self.title = title
         self.artist = artist

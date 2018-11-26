@@ -14,7 +14,7 @@ data = {}
 playlist_names = {}
 #Link a track ID to a track object
 track_data = {}
-
+album_genres = {}
 def is_good_playlist(items):
     artists = set()
     albums = set()
@@ -25,6 +25,24 @@ def is_good_playlist(items):
             albums.add(track['album']['id'])
     return len(artists) > 1 and len(albums) > 1
 
+# Removed genre details
+# Made queries longer, lack of spotify genre data, difficult comparisons with genre lists
+# def get_album_genre(album_id):
+#     global album_genres
+#     if album_id in album_genres.keys():
+#         return album_genres[album_id]
+#     album = sp.album(album_id)
+#     genre_list = album['genres']
+#     if len(genre_list) < 1:
+#         album_genres[album_id] = "N/A"
+#         return "N/A"
+#     else:
+#         genre_string = ""
+#         for genre in genre_list:
+#             genre_string += ","
+#             genre_string += genre
+#         album_genres[album_id] = genre_string
+#         return genre_string
 
 def process_playlist(playlist):
     global data
@@ -48,6 +66,7 @@ def process_playlist(playlist):
                 if track and (track['name'] is not None) and (track['artists'] is not None):
                     tid = track['id']
                     title = track['name']
+                    album_id = track['album']['id']
                     artist = track['artists'][0]['name']
                     track_data[tid] = Track(title, artist)
                     data[pid][tid] = Track(title, artist)
@@ -57,6 +76,8 @@ def process_playlist(playlist):
         print('trouble, skipping')
     except ConnectionError:
         print('Connection error, skipping')
+    except:
+        print("Skipping due to other error")
 
 
 def save():
@@ -102,7 +123,7 @@ def load_data():
 def crawl_playlists():
     queries = ['the']
     limit = 50
-    max = 2
+    max = 1
     count = 0
     for query in queries:
         which = 0

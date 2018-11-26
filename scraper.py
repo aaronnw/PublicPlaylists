@@ -154,12 +154,15 @@ def print_playlists():
 
 def build_edge_list():
     edges = defaultdict(list)
+    count = 1
     # Look at a playlist and add an edge for every track to every other.
     for tracklist in data.values():
+        print("Building edges for playlist number: ", count)
         for track in tracklist:
             for other_track in tracklist:
                 if track != other_track:
                     edges[track].append(other_track)
+        count += 1
     return edges
 
 def combine_edges(edges):

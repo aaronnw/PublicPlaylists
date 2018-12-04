@@ -1,3 +1,4 @@
+'''Simple data class for storing track info'''
 class Track:
     title : str
     artist : str
